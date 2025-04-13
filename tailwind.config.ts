@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss"
 
 const config = {
-  darkMode: ["class", "dark"],
+  darkMode: ["class","dark"],
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -53,23 +53,22 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        purple: {
-          400: "#c084fc",
-          500: "#a855f7",
-          600: "#9333ea",
-          700: "#7e22ce",
-          800: "#6b21a8",
-          950: "#3b0764",
+        // Custom colors based on the image
+        brand: {
+          green: "#36d45a",
+          teal: "#22b8cf",
+          blue: "#3b82f6",
+          indigo: "#6366f1",
+          purple: "#8b5cf6",
+          violet: "#a855f7",
+          pink: "#ec4899",
         },
-        pink: {
-          400: "#f472b6",
-          500: "#ec4899",
-          600: "#db2777",
-          700: "#be185d",
-        },
-        gray: {
-          800: "#1f2937",
-          900: "#111827",
+        // Dark background colors
+        dark: {
+          900: "#0a0a0a",
+          800: "#121212",
+          700: "#1a1a1a",
+          600: "#222222",
         },
       },
       borderRadius: {
