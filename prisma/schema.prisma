@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  name        String?
+  spacesOwned Space[]  @relation("SpaceOwner")
+  memberships SpaceMembership[]
+  votes       Vote[]
+  createdAt   DateTime @default(now())
+  songsAdded Song[] 
+}
+
+model Space {
+  id           String             @id @default(uuid())
+  name         String
+  joinCode     String             @unique
+  ownerId      String
+  owner        User               @relation("SpaceOwner", fields: [ownerId], references: [id])
+  members      SpaceMembership[]
+  songs        Song[]
+  createdAt    DateTime           @default(now())
+}
+
+model SpaceMembership {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  space     Space    @relation(fields: [spaceId], references: [id])
+  spaceId   String
+  joinedAt  DateTime @default(now())
+
+  @@unique([userId, spaceId])
+}
+
+model Song {
+  id         String    @id @default(uuid())
+  youtubeUrl String
+  title      String
+  space      Space     @relation(fields: [spaceId], references: [id])
+  spaceId    String
+ 
+  addedBy    User    @relation( fields: [addedById], references: [id])
+  addedById  String
+  votes      Vote[]
+  createdAt  DateTime  @default(now())
+
+
+}
+
+model Vote {
+  id      String   @id @default(uuid())
+  user    User     @relation(fields: [userId], references: [id])
+  userId  String
+  song    Song     @relation(fields: [songId], references: [id])
+  songId  String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, songId])
+}
+
