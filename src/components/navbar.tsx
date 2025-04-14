@@ -47,6 +47,16 @@ export function Navbar() {
                 About
               </Link>
             </li>
+            {user && (
+              <li>
+                <Link
+                  href="/joinspace"
+                  className={`text-sm ${pathname === "/joinspace" ? "text-brand-teal" : "text-muted-foreground"} hover:text-brand-teal transition-colors`}
+                >
+                  Spaces
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
 

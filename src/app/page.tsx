@@ -8,30 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Music, Play, Plus, ThumbsUp, Users } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 
-
 export default function Home() {
   const router = useRouter()
   const { user } = useAuth()
-
-  const handleCreateSpace = () => {
-    if (!user) {
-      alert("Please sign in to create a space")
-      router.push("/login")
-      return
-    }
-
-    router.push("/space")
-  }
-
-  const handleJoinSpace = () => {
-    if (!user) {
-      alert("Please sign in to join a space")
-      router.push("/login")
-      return
-    }
-
-    router.push("/space")
-  }
 
   return (
     <div className="min-h-screen text-foreground" style={{ backgroundColor: "hsl(240, 10%, 3.9%)" }}>
@@ -67,7 +46,7 @@ export default function Home() {
                 <Button 
                   size="lg" 
                   className="border-0" 
-                  onClick={handleCreateSpace}
+                  asChild
                   style={{ 
                     backgroundImage: "linear-gradient(90deg, #36d45a, #3b82f6, #8b5cf6)",
                     transition: "all 0.3s ease"
@@ -79,7 +58,7 @@ export default function Home() {
                     e.currentTarget.style.backgroundImage = "linear-gradient(90deg, #36d45a, #3b82f6, #8b5cf6)"
                   }}
                 >
-                  Get Started
+                  <Link href="/spaces">Get Started</Link>
                 </Button>
               ) : (
                 <Button 
@@ -116,129 +95,6 @@ export default function Home() {
                 Learn More
               </Button>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Create or Join Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32">
-        <div className="container px-4 md:px-6">
-          <div className="mx-auto max-w-[800px]">
-            {user ? (
-              <Tabs defaultValue="create" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="create">Create a Space</TabsTrigger>
-                  <TabsTrigger value="join">Join a Space</TabsTrigger>
-                </TabsList>
-                <TabsContent value="create" className="mt-6">
-                  <Card style={{ borderColor: "rgba(255, 255, 255, 0.1)", backgroundColor: "hsl(240, 10%, 5%)" }}>
-                    <CardHeader>
-                      <CardTitle>Create Your Music Space</CardTitle>
-                      <CardDescription>Set up a new space where you can add songs and invite friends.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <label htmlFor="space-name" className="text-sm font-medium leading-none">
-                          Space Name
-                        </label>
-                        <Input id="space-name" placeholder="My Awesome Playlist" />
-                      </div>
-                      <div className="space-y-2">
-                        <label htmlFor="your-name" className="text-sm font-medium leading-none">
-                          Your Name
-                        </label>
-                        <Input id="your-name" placeholder="DJ Awesome" defaultValue={user.name} />
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button 
-                        className="w-full border-0" 
-                        onClick={handleCreateSpace}
-                        style={{ 
-                          backgroundImage: "linear-gradient(90deg, #36d45a, #3b82f6, #8b5cf6)",
-                          transition: "all 0.3s ease"
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.backgroundImage = "linear-gradient(90deg, #22b8cf, #6366f1, #a855f7)"
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.backgroundImage = "linear-gradient(90deg, #36d45a, #3b82f6, #8b5cf6)"
-                        }}
-                      >
-                        Create Space
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </TabsContent>
-                <TabsContent value="join" className="mt-6">
-                  <Card style={{ borderColor: "rgba(255, 255, 255, 0.1)", backgroundColor: "hsl(240, 10%, 5%)" }}>
-                    <CardHeader>
-                      <CardTitle>Join an Existing Space</CardTitle>
-                      <CardDescription>Enter a space code to join your friends' music queue.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <label htmlFor="space-code" className="text-sm font-medium leading-none">
-                          Space Code
-                        </label>
-                        <Input id="space-code" placeholder="Enter 6-digit code" />
-                      </div>
-                      <div className="space-y-2">
-                        <label htmlFor="your-name-join" className="text-sm font-medium leading-none">
-                          Your Name
-                        </label>
-                        <Input id="your-name-join" placeholder="Your display name" defaultValue={user.name} />
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button 
-                        className="w-full border-0" 
-                        onClick={handleJoinSpace}
-                        style={{ 
-                          backgroundImage: "linear-gradient(90deg, #36d45a, #3b82f6, #8b5cf6)",
-                          transition: "all 0.3s ease"
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.backgroundImage = "linear-gradient(90deg, #22b8cf, #6366f1, #a855f7)"
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.backgroundImage = "linear-gradient(90deg, #36d45a, #3b82f6, #8b5cf6)"
-                        }}
-                      >
-                        Join Space
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            ) : (
-              <Card style={{ borderColor: "rgba(255, 255, 255, 0.1)", backgroundColor: "hsl(240, 10%, 5%)" }}>
-                <CardHeader>
-                  <CardTitle>Sign in to get started</CardTitle>
-                  <CardDescription>
-                    You need to sign in with your Google account to create or join a music space.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-center py-6">
-                  <Button 
-                    className="border-0" 
-                    asChild
-                    style={{ 
-                      backgroundImage: "linear-gradient(90deg, #36d45a, #3b82f6, #8b5cf6)",
-                      transition: "all 0.3s ease"
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.backgroundImage = "linear-gradient(90deg, #22b8cf, #6366f1, #a855f7)"
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.backgroundImage = "linear-gradient(90deg, #36d45a, #3b82f6, #8b5cf6)"
-                    }}
-                  >
-                    <Link href="/login">Sign In with Google</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
       </section>
