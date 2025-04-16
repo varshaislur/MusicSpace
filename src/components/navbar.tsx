@@ -53,7 +53,7 @@ export function Navbar() {
                   href="/joinspace"
                   className={`text-sm ${pathname === "/joinspace" ? "text-brand-teal" : "text-muted-foreground"} hover:text-brand-teal transition-colors`}
                 >
-                  Spaces
+                  Join Space
                 </Link>
               </li>
             )}
@@ -65,9 +65,9 @@ export function Navbar() {
             <>
               <span className="text-sm text-muted-foreground hidden md:inline-block">{user.name}</span>
               <Avatar>
-                <AvatarImage src={user.image || "/placeholder.svg"} alt={user.name} />
+                <AvatarImage src={user.image || "/placeholder.svg"} alt="varsha" />
                 <AvatarFallback className="bg-gradient-uidino">
-                  {user.name.substring(0, 2).toUpperCase()}
+                  VA
                 </AvatarFallback>
               </Avatar>
               <Button

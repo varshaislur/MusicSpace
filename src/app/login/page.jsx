@@ -1,4 +1,5 @@
 "use client"
+
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -16,52 +17,29 @@ export default function LoginPage() {
     setIsLoading(true)
     try {
       await signInWithGoogle()
-      router.push("/")
+      // Note: No need to redirect manually as NextAuth handles this with callbackUrl
     } catch (error) {
       console.error("Login failed:", error)
-    } finally {
-      setIsLoading(false)
+      setIsLoading(false) // Only need to reset loading if there's an error
     }
   }
 
   return (
-    <div className="relative flex items-center justify-center p-4 overflow-hidden" 
-      style={{ minHeight: "calc(100vh - 4rem)" }}>
+    <div className="relative flex items-center justify-center p-4 overflow-hidden min-h-[calc(100vh-4rem)]">
       {/* Background gradient elements */}
       <div className="absolute inset-0 opacity-30">
-        <div className="absolute -left-1/4 top-0 h-64 w-64 rounded-full blur-3xl" 
-          style={{ 
-            background: "linear-gradient(135deg, #36d45a 0%, #22b8cf 25%, #3b82f6 50%, #8b5cf6 75%, #a855f7 100%)" 
-          }}>
-        </div>
-        <div className="absolute -right-1/4 bottom-0 h-64 w-64 rounded-full blur-3xl" 
-          style={{ 
-            background: "linear-gradient(135deg, #36d45a 0%, #22b8cf 25%, #3b82f6 50%, #8b5cf6 75%, #a855f7 100%)" 
-          }}>
-        </div>
+        <div className="absolute -left-1/4 top-0 h-64 w-64 rounded-full blur-3xl bg-gradient-to-br from-green-400 via-blue-500 to-purple-500"></div>
+        <div className="absolute -right-1/4 bottom-0 h-64 w-64 rounded-full blur-3xl bg-gradient-to-br from-green-400 via-blue-500 to-purple-500"></div>
       </div>
       
-      <Card className="relative z-10 w-full max-w-md border backdrop-blur-sm" 
-        style={{ 
-          borderColor: "rgba(255, 255, 255, 0.1)", 
-          backgroundColor: "rgba(15, 15, 20, 0.8)" 
-        }}>
+      <Card className="relative z-10 w-full max-w-md border backdrop-blur-sm bg-black/80 border-white/10">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full" 
-              style={{ 
-                background: "linear-gradient(135deg, #36d45a 0%, #22b8cf 25%, #3b82f6 50%, #8b5cf6 75%, #a855f7 100%)" 
-              }}>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-green-400 via-blue-500 to-purple-500">
               <Music className="h-6 w-6 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold" 
-            style={{ 
-              backgroundImage: "linear-gradient(90deg, #36d45a, #22b8cf, #3b82f6, #8b5cf6, #a855f7)",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              WebkitTextFillColor: "transparent"
-            }}>
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">
             Welcome to MusicSpace
           </CardTitle>
           <CardDescription>Sign in to create or join music spaces with your friends</CardDescription>
@@ -76,7 +54,7 @@ export default function LoginPage() {
               alt="Music illustration"
               className="mb-8 rounded-lg"
             />
-            <p className="text-center mb-4" style={{ color: "hsl(240, 5%, 64.9%)" }}>
+            <p className="text-center mb-4 text-gray-400">
               Create collaborative music queues where friends can join, vote, and enjoy music together in real-time.
             </p>
           </div>
@@ -84,19 +62,9 @@ export default function LoginPage() {
         
         <CardFooter>
           <Button
-            className="w-full flex items-center justify-center gap-2"
+            className="w-full flex items-center justify-center gap-2 bg-white text-gray-900 hover:bg-gray-100"
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            style={{ 
-              backgroundColor: "white", 
-              color: "#111827" 
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = "#f3f4f6";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = "white";
-            }}
           >
             <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
               <g transform="matrix(1, 0, 0, 1, 0, 0)">

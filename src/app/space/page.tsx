@@ -90,9 +90,9 @@ export default function SpacePage() {
               </Badge>
             </div>
             <Avatar>
-              <AvatarImage src={user.image || "/placeholder.svg"} alt={user.name} />
+              <AvatarImage src={user.image || "/placeholder.svg"} alt="varsha" />
               <AvatarFallback className="bg-gradient-to-r from-green-500 via-blue-500 to-purple-500">
-                {user.name.substring(0, 2).toUpperCase()}
+               VA
               </AvatarFallback>
             </Avatar>
           </div>

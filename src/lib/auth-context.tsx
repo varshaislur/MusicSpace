@@ -1,64 +1,76 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { signIn, signOut as nextAuthSignOut, useSession } from "next-auth/react"
 
 type User = {
   id: string
-  name: string
-  email: string
-  image: string
+  name: string | null | undefined
+  email: string | null | undefined
+  image: string | null  | undefined
 }
 
 type AuthContextType = {
   user: User | null
   isLoading: boolean
   signInWithGoogle: () => Promise<void>
-  signOut: () => void
+  signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const { data: session, status } = useSession()
+  const [user, setUser] = useState<User | null>({
+    id: "12345",
+    name: "varsha" ,
+    email: "varshapracs",
+    image: "https://example.com/image.jpg"
+  })
+  const isLoading = status === "loading"
 
-  // Check for existing session on mount
+  // Update user when session changes
   useEffect(() => {
-    const storedUser = localStorage.getItem("musicspace_user")
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    if (session?.user) {
+      console.log("Session user:", session.user)
+      setUser({
+        id: Math.random().toString(36).substring(2, 15), 
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image,
+      })
+    } else {
+      setUser(null)
     }
-    setIsLoading(false)
-  }, [])
+  }, [session])
 
-  // Mock Google sign in
+  // Sign in with Google using NextAuth
   const signInWithGoogle = async () => {
-    setIsLoading(true)
-
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    // Mock user data
-    const mockUser: User = {
-      id: "user_" + Math.random().toString(36).substring(2, 9),
-      name: "Music Lover",
-      email: "user@example.com",
-      image: "/placeholder.svg?height=40&width=40",
+    try {
+      await signIn("google", { callbackUrl: "/" })
+      return Promise.resolve()
+    } catch (error) {
+      console.error("Sign in failed:", error)
+      return Promise.reject(error)
     }
-
-    setUser(mockUser)
-    localStorage.setItem("musicspace_user", JSON.stringify(mockUser))
-    setIsLoading(false)
-
-    return Promise.resolve()
   }
 
-  const signOut = () => {
-    setUser(null)
-    localStorage.removeItem("musicspace_user")
+  // Sign out using NextAuth
+  const signOut = async () => {
+    try {
+      await nextAuthSignOut({ callbackUrl: "/login" })
+      return Promise.resolve()
+    } catch (error) {
+      console.error("Sign out failed:", error)
+      return Promise.reject(error)
+    }
   }
 
-  return <AuthContext.Provider value={{ user, isLoading, signInWithGoogle, signOut }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, isLoading, signInWithGoogle, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

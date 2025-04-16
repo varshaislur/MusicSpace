@@ -79,7 +79,7 @@ export default function SpacesPage() {
                       <label htmlFor="your-name" className="text-sm font-medium leading-none">
                         Your Name
                       </label>
-                      <Input id="your-name" placeholder="DJ Awesome" defaultValue={user.name} />
+                      <Input id="your-name" placeholder="DJ Awesome" defaultValue="varsha"/>
                     </div>
                   </CardContent>
                   <CardFooter>
@@ -119,7 +119,7 @@ export default function SpacesPage() {
                       <label htmlFor="your-name-join" className="text-sm font-medium leading-none">
                         Your Name
                       </label>
-                      <Input id="your-name-join" placeholder="Your display name" defaultValue={user.name} />
+                      <Input id="your-name-join" placeholder="Your display name" defaultValue="varsha" />
                     </div>
                   </CardContent>
                   <CardFooter>
