@@ -15,3 +15,4 @@ const verifyToken = (token) => {
         return null;
     }
 }
+export { generateToken, verifyToken };
