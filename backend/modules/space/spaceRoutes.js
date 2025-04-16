@@ -12,8 +12,8 @@ const router = express.Router();
 
 router.post('/create', authenticate, createSpace);
 router.get('/mySpaces', authenticate, getMySpaces);
-router.get('/:id', authenticate, getSpaceDetails);
-router.post('/:id/join', authenticate, joinSpace);
+router.get('/:id/spaceDetails', authenticate, getSpaceDetails);
+router.post('/join', authenticate, joinSpace);
 router.get('/:id/members', authenticate, getSpaceMembers);
 
 export default router;

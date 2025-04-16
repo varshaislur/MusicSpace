@@ -1,4 +1,4 @@
-import prisma from '../utils/prisma.js';
+import prisma from '../../utils/prisma.js';
 import { generateRandomCode } from '../../utils/helpers.js';
 
 export const createSpace = async (req, res) => {

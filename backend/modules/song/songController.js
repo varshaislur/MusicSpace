@@ -1,10 +1,9 @@
 import prisma from '../utils/prisma.js';
-import { extractYouTubeDetails } from '../utils/youtube.js';
 
 export const addSong = async (req, res) => {
   try {
     const { spaceId } = req.params;
-    const { youtubeUrl } = req.body;
+    const { youtubeUrl,title } = req.body;
     const userId = req.user.userId;
     
     // Check if space exists and user is a member
@@ -21,18 +20,13 @@ export const addSong = async (req, res) => {
       return res.status(403).json({ message: 'Access denied or space not found' });
     }
     
-    // Extract YouTube video details
-    const videoDetails = await extractYouTubeDetails(youtubeUrl);
     
-    if (!videoDetails) {
-      return res.status(400).json({ message: 'Invalid YouTube URL' });
-    }
     
     // Create song
     const song = await prisma.song.create({
       data: {
         youtubeUrl,
-        title: videoDetails.title,
+        title: title,
         space: { connect: { id: spaceId } },
         addedBy: { connect: { id: userId } }
       },

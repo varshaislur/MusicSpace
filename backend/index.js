@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
 import userRoutes from "./modules/user/userRoutes.js";
 import bodyParser from "body-parser";
+import spaceRoutes from "./modules/space/spaceRoutes.js";
 
 
 dotenv.config();
@@ -22,4 +23,5 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 app.use('/api/user',userRoutes)
+app.use('/api/space',spaceRoutes)
   
