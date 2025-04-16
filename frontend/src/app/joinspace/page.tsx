@@ -11,7 +11,6 @@ export default function SpacesPage() {
   const router = useRouter()
   const { user } = useAuth()
 
-  // Redirect to login if not authenticated
   if (!user) {
     router.push("/login")
     return null
