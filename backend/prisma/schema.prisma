@@ -47,7 +47,7 @@ model SpaceMembership {
   spaceId  String
   joinedAt DateTime @default(now())
 
-  @@unique([userId, spaceId])
+  @@unique([userId, spaceId],name: "userId_spaceId")
 }
 
 model Song {

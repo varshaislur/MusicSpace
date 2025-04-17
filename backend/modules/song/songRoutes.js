@@ -9,8 +9,8 @@ import authenticate from '../../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/:spaceId/songs', authenticate, addSong);
-router.get('/:spaceId/songs', authenticate, getSongs);
+router.post('/:spaceId/addSongs', authenticate, addSong);
+router.get('/:spaceId/getSongs', authenticate, getSongs);
 router.post('/:spaceId/songs/:songId/vote', authenticate, voteSong);
 router.delete('/:spaceId/songs/:songId', authenticate, removeSong);
 
