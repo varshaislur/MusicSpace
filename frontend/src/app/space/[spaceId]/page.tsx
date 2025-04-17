@@ -61,7 +61,10 @@ export default function SpacePage() {
   const [error, setError] = useState("")
   const [spaceDetails, setSpaceDetails] = useState<SpaceDetails | null>(null)
   const [youtubeUrl, setYoutubeUrl] = useState("")
+  const [songTitle, setSongTitle] = useState("")
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [addingSong, setAddingSong] = useState(false)
 
   // Fetch space details on component mount
   useEffect(() => {
@@ -72,6 +75,13 @@ export default function SpacePage() {
         if (!token) {
           router.push("/login")
           return
+        }
+
+        // Get current user ID
+        const userData = localStorage.getItem("musicSpaceUser")
+        if (userData) {
+          const user = JSON.parse(userData)
+          setCurrentUserId(user.id)
         }
 
         setLoading(true)
@@ -109,20 +119,23 @@ export default function SpacePage() {
     if (!youtubeUrl || !spaceId) return
     
     try {
+      setAddingSong(true)
       const token = localStorage.getItem("musicSpaceToken")
       if (!token) {
         router.push("/login")
         return
       }
 
-      const response = await fetch(`http://localhost:5000/api/space/${spaceId}/songs`, {
+      // Updated endpoint to match what's shown in the API request
+      const response = await fetch(`http://localhost:5000/api/song/${spaceId}/addSongs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          youtubeUrl
+          youtubeUrl,
+          title: songTitle || undefined // Only send if user provided a title
         })
       })
 
@@ -141,10 +154,13 @@ export default function SpacePage() {
       }
       
       setYoutubeUrl("")
+      setSongTitle("")
       alert("Song added to the queue!")
     } catch (err) {
       console.error("Error adding song:", err)
       alert("Failed to add song. Please try again.")
+    } finally {
+      setAddingSong(false)
     }
   }
 
@@ -156,7 +172,16 @@ export default function SpacePage() {
         return
       }
 
-      const response = await fetch(`http://localhost:5000/api/space/${spaceId}/songs/${songId}/vote`, {
+      // User can only vote once, check if already voted
+      if (spaceDetails && currentUserId) {
+        const song = spaceDetails.songs.find(s => s.id === songId)
+        if (song && song.votes.some(vote => vote.userId === currentUserId)) {
+          // If already voted, we could implement unvote functionality here
+          return
+        }
+      }
+
+      const response = await fetch(`http://localhost:5000/api/song/${spaceId}/songs/${songId}/vote`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`
@@ -168,24 +193,13 @@ export default function SpacePage() {
       }
 
       // Update the song votes in the local state
-      if (spaceDetails) {
+      if (spaceDetails && currentUserId) {
         const updatedSongs = spaceDetails.songs.map(song => {
           if (song.id === songId) {
-            // Get current user ID from localStorage
-            const userData = localStorage.getItem("musicSpaceUser")
-            const userId = userData ? JSON.parse(userData).id : null
-            
-            if (userId) {
-              // Check if user has already voted
-              const alreadyVoted = song.votes.some(vote => vote.userId === userId)
-              
-              if (!alreadyVoted) {
-                // Add new vote
-                return {
-                  ...song,
-                  votes: [...song.votes, { id: "temp-id", songId, userId }]
-                }
-              }
+            // Add new vote
+            return {
+              ...song,
+              votes: [...song.votes, { id: "temp-id", songId, userId: currentUserId }]
             }
           }
           return song
@@ -203,6 +217,12 @@ export default function SpacePage() {
       console.error("Error voting for song:", err)
       alert("Failed to vote for song. Please try again.")
     }
+  }
+
+  // Check if current user has already upvoted a song
+  const hasUserVoted = (song: Song): boolean => {
+    if (!currentUserId) return false
+    return song.votes.some(vote => vote.userId === currentUserId)
   }
 
   const copySpaceCode = () => {
@@ -322,18 +342,32 @@ export default function SpacePage() {
 
             <div className="space-y-4">
               <h3 className="text-xl font-bold">Add a Song</h3>
-              <div className="flex gap-2">
+              <div className="space-y-2">
                 <Input
                   placeholder="Paste YouTube URL here..."
                   value={youtubeUrl}
                   onChange={(e) => setYoutubeUrl(e.target.value)}
                   className="border-white/10 bg-zinc-900"
                 />
+                <Input
+                  placeholder="Song title (optional - will be fetched from YouTube if empty)"
+                  value={songTitle}
+                  onChange={(e) => setSongTitle(e.target.value)}
+                  className="border-white/10 bg-zinc-900"
+                />
                 <Button 
-                  className="bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:from-cyan-500 hover:via-indigo-500 hover:to-purple-600 border-0 transition-all duration-300" 
+                  className="w-full bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:from-cyan-500 hover:via-indigo-500 hover:to-purple-600 border-0 transition-all duration-300" 
                   onClick={handleAddSong}
+                  disabled={addingSong || !youtubeUrl}
                 >
-                  Add
+                  {addingSong ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    "Add Song"
+                  )}
                 </Button>
               </div>
             </div>
@@ -357,10 +391,13 @@ export default function SpacePage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 flex items-center gap-1 hover:bg-black"
+                          className={`h-8 flex items-center gap-1 hover:bg-black ${hasUserVoted(song) ? 'bg-green-900/20' : ''}`}
                           onClick={() => handleUpvote(song.id)}
+                          disabled={hasUserVoted(song)}
                         >
-                          <ThumbsUp className="h-4 w-4 text-green-500" />
+                          <ThumbsUp 
+                            className={`h-4 w-4 ${hasUserVoted(song) ? 'text-green-500 fill-green-500' : 'text-green-500'}`} 
+                          />
                           <span className="text-xs">{song.votes.length}</span>
                         </Button>
                       </div>
