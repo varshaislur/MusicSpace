@@ -12,6 +12,6 @@ const router = express.Router();
 router.post('/:spaceId/addSongs', authenticate, addSong);
 router.get('/:spaceId/getSongs', authenticate, getSongs);
 router.post('/:spaceId/songs/:songId/vote', authenticate, voteSong);
-router.delete('/:spaceId/songs/:songId', authenticate, removeSong);
+router.delete('/:spaceId/songs/:songId/delete', authenticate, removeSong);
 
 export default router;
