@@ -1,10 +1,30 @@
 import prisma from '../../utils/prisma.js';
+import youtubesearchapi from 'youtube-search-api';
+
+const extractYoutubeVideoId = (url) => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  
+  return (match && match[2].length === 11) ? match[2] : null;
+};
+
+// Helper function to validate YouTube URL
+const isValidYoutubeUrl = (url) => {
+  const regExp = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/;
+  return regExp.test(url);
+};
+
 
 export const addSong = async (req, res) => {
   try {
     const { spaceId } = req.params;
-    const { youtubeUrl,title } = req.body;
+    const { youtubeUrl, title: providedTitle } = req.body;
     const userId = req.user.userId;
+    
+    // Validate URL format
+    if (!isValidYoutubeUrl(youtubeUrl)) {
+      return res.status(400).json({ message: 'Invalid YouTube URL format' });
+    }
     
     // Check if space exists and user is a member
     const membership = await prisma.spaceMembership.findUnique({
@@ -20,13 +40,36 @@ export const addSong = async (req, res) => {
       return res.status(403).json({ message: 'Access denied or space not found' });
     }
     
+    // Extract YouTube video ID
+    const videoId = extractYoutubeVideoId(youtubeUrl);
+    if (!videoId) {
+      return res.status(400).json({ message: 'Could not extract valid YouTube video ID' });
+    }
     
+    // Determine the title to use - fetch from YouTube if not provided
+    let finalTitle = providedTitle;
+    
+    if (!finalTitle || finalTitle.trim() === '') {
+      try {
+        // Fetch video details from YouTube API
+        const videoDetails = await youtubesearchapi.GetVideoDetails(videoId);
+        
+        if (videoDetails && videoDetails.title) {
+          finalTitle = videoDetails.title;
+        } else {
+          finalTitle = 'Unknown Title';
+        }
+      } catch (apiError) {
+        console.error('YouTube API error:', apiError);
+        finalTitle = 'Unknown Title';
+      }
+    }
     
     // Create song
     const song = await prisma.song.create({
       data: {
         youtubeUrl,
-        title: title,
+        title: finalTitle,
         space: { connect: { id: spaceId } },
         addedBy: { connect: { id: userId } }
       },
