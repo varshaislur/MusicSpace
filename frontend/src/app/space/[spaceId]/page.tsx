@@ -9,9 +9,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, Copy, Music, Play, ThumbsUp, Users } from "lucide-react"
+import { useParams } from "next/navigation"
 
 export default function SpacePage() {
   const router = useRouter()
+  const { spaceId } = useParams();
+  console.log(spaceId)  
  
   
   const [youtubeUrl, setYoutubeUrl] = useState("")

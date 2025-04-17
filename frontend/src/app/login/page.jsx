@@ -71,6 +71,8 @@ export default function AuthPage() {
         name: data.name,
         email: data.email
       }))
+
+      window.dispatchEvent(new Event("authChange"))
       
       // Redirect to join space page
       router.push("/joinspace")
@@ -113,6 +115,8 @@ export default function AuthPage() {
         name: data.name,
         email: data.email
       }))
+
+      window.dispatchEvent(new Event("authChange"))
       
       // Redirect to join space page
       router.push("/joinspace")
