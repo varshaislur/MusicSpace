@@ -7,10 +7,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Music, Play, Plus, ThumbsUp, Users } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
+import { useState } from "react"
 
 export default function Home() {
   const router = useRouter()
-  const { user } = useAuth()
+  const [user, setUser] = useState(null)
+  
 
   return (
     <div className="min-h-screen text-foreground" style={{ backgroundColor: "hsl(240, 10%, 3.9%)" }}>

@@ -15,7 +15,7 @@ import { useAuth } from "@/lib/auth-context"
 export default function SpacePage() {
   const router = useRouter()
  
-  const { user } = useAuth()
+  
   const [youtubeUrl, setYoutubeUrl] = useState("")
   const [queue, setQueue] = useState([
     { id: 1, title: "Summer Vibes", artist: "DJ Cool", votes: 12 },
@@ -24,12 +24,7 @@ export default function SpacePage() {
   ])
 
   // Redirect if not authenticated
-  useEffect(() => {
-    if (!user) {
-      alert("You need to be logged in to access this page.")
-      router.push("/login")
-    }
-  }, [user, router])
+ 
 
   const handleAddSong = () => {
     if (!youtubeUrl) return
@@ -62,9 +57,7 @@ export default function SpacePage() {
   }
 
   // If not authenticated, don't render the content
-  if (!user) {
-    return null
-  }
+  
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -90,7 +83,7 @@ export default function SpacePage() {
               </Badge>
             </div>
             <Avatar>
-              <AvatarImage src={user.image || "/placeholder.svg"} alt="varsha" />
+              <AvatarImage src={"/placeholder.svg"} alt="varsha" />
               <AvatarFallback className="bg-gradient-to-r from-green-500 via-blue-500 to-purple-500">
                VA
               </AvatarFallback>

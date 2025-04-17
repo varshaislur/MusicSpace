@@ -7,33 +7,120 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Music } from "lucide-react"
-import { useAuth } from "@/lib/auth-context"
+import { Music, UserPlus, LogIn } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export default function LoginPage() {
+export default function AuthPage() {
   const router = useRouter()
-  const { signIn } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [activeTab, setActiveTab] = useState("login")
+  
+  // Login state
+  const [loginData, setLoginData] = useState({
+    email: "",
+    password: "",
+  })
+  const [loginLoading, setLoginLoading] = useState(false)
+  const [loginError, setLoginError] = useState("")
 
-  const handleSignIn = async (e) => {
+  // Register state
+  const [registerData, setRegisterData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  })
+  const [registerLoading, setRegisterLoading] = useState(false)
+  const [registerError, setRegisterError] = useState("")
+
+  const handleLoginChange = (e) => {
+    const { name, value } = e.target
+    setLoginData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleRegisterChange = (e) => {
+    const { name, value } = e.target
+    setRegisterData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleLogin = async (e) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    setLoginLoading(true)
+    setLoginError("")
     
     try {
-      // Call the signIn function from auth context with email and password
-      await signIn(email, password)
+      const response = await fetch("http://localhost:5000/api/user/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: loginData.email,
+          password: loginData.password
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error("Login failed")
+      }
+
+      const data = await response.json()
       
-      // For now using dummy data, redirect to joinspace page
+      // Store token in localStorage
+      localStorage.setItem("musicSpaceToken", data.token)
+      localStorage.setItem("musicSpaceUser", JSON.stringify({
+        id: data.id,
+        name: data.name,
+        email: data.email
+      }))
+      
+      // Redirect to join space page
       router.push("/joinspace")
     } catch (error) {
       console.error("Login failed:", error)
-      setError("Invalid email or password. Please try again.")
+      setLoginError("Invalid email or password. Please try again.")
     } finally {
-      setIsLoading(false)
+      setLoginLoading(false)
+    }
+  }
+
+  const handleRegister = async (e) => {
+    e.preventDefault()
+    setRegisterLoading(true)
+    setRegisterError("")
+    
+    try {
+      const response = await fetch("http://localhost:5000/api/user/register", {
+        method: "POST", 
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: registerData.name,
+          email: registerData.email,
+          password: registerData.password
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error("Registration failed")
+      }
+
+      const data = await response.json()
+      
+      // Store token in localStorage
+      localStorage.setItem("musicSpaceToken", data.token)
+      localStorage.setItem("musicSpaceUser", JSON.stringify({
+        id: data.id,
+        name: data.name,
+        email: data.email
+      }))
+      
+      // Redirect to join space page
+      router.push("/joinspace")
+    } catch (error) {
+      console.error("Registration failed:", error)
+      setRegisterError("Registration failed. Please try again.")
+    } finally {
+      setRegisterLoading(false)
     }
   }
 
@@ -55,64 +142,133 @@ export default function LoginPage() {
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">
             Welcome to MusicSpace
           </CardTitle>
-          <CardDescription>Sign in to create or join music spaces with your friends</CardDescription>
+          <CardDescription>Sign in or create an account to join music spaces with friends</CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-4">
-          <form onSubmit={handleSignIn}>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email"
-                  type="email" 
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="bg-black/50 border-white/20"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password"
-                  type="password" 
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="bg-black/50 border-white/20"
-                />
-              </div>
-              
-              {error && (
-                <div className="text-red-500 text-sm">{error}</div>
-              )}
-              
-              <Button 
-                type="submit"
-                className="w-full bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 hover:opacity-90"
-                disabled={isLoading}
-              >
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </div>
-          </form>
-          
-          <div className="text-center pt-4">
-            <p className="text-sm text-gray-400">
-              Don't have an account?{" "}
-              <Button 
-                variant="link" 
-                className="p-0 h-auto text-blue-400 hover:text-blue-300"
-                onClick={() => router.push("/register")}
-              >
+          <Tabs 
+            defaultValue="login" 
+            value={activeTab} 
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="login" className="flex items-center gap-2">
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </TabsTrigger>
+              <TabsTrigger value="register" className="flex items-center gap-2">
+                <UserPlus className="h-4 w-4" />
                 Register
-              </Button>
-            </p>
-          </div>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="login" className="mt-0">
+              <form onSubmit={handleLogin}>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input 
+                      id="login-email"
+                      name="email"
+                      type="email" 
+                      placeholder="Enter your email"
+                      value={loginData.email}
+                      onChange={handleLoginChange}
+                      required
+                      className="bg-black/50 border-white/20"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Password</Label>
+                    <Input 
+                      id="login-password"
+                      name="password"
+                      type="password" 
+                      placeholder="Enter your password"
+                      value={loginData.password}
+                      onChange={handleLoginChange}
+                      required
+                      className="bg-black/50 border-white/20"
+                    />
+                  </div>
+                  
+                  {loginError && (
+                    <div className="text-red-500 text-sm">{loginError}</div>
+                  )}
+                  
+                  <Button 
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 hover:opacity-90"
+                    disabled={loginLoading}
+                  >
+                    {loginLoading ? "Signing in..." : "Sign In"}
+                  </Button>
+                </div>
+              </form>
+            </TabsContent>
+            
+            <TabsContent value="register" className="mt-0">
+              <form onSubmit={handleRegister}>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="register-name">Name</Label>
+                    <Input 
+                      id="register-name"
+                      name="name"
+                      type="text" 
+                      placeholder="Enter your name"
+                      value={registerData.name}
+                      onChange={handleRegisterChange}
+                      required
+                      className="bg-black/50 border-white/20"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="register-email">Email</Label>
+                    <Input 
+                      id="register-email"
+                      name="email"
+                      type="email" 
+                      placeholder="Enter your email"
+                      value={registerData.email}
+                      onChange={handleRegisterChange}
+                      required
+                      className="bg-black/50 border-white/20"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="register-password">Password</Label>
+                    <Input 
+                      id="register-password"
+                      name="password"
+                      type="password" 
+                      placeholder="Create a password"
+                      value={registerData.password}
+                      onChange={handleRegisterChange}
+                      required
+                      className="bg-black/50 border-white/20"
+                    />
+                  </div>
+                  
+                  {registerError && (
+                    <div className="text-red-500 text-sm">{registerError}</div>
+                  )}
+                  
+                  <Button 
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 hover:opacity-90"
+                    disabled={registerLoading}
+                  >
+                    {registerLoading ? "Creating account..." : "Create Account"}
+                  </Button>
+                </div>
+              </form>
+            </TabsContent>
+          </Tabs>
           
           <div className="flex flex-col items-center justify-center pt-4">
             <Image

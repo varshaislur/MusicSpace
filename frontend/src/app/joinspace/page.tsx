@@ -11,10 +11,7 @@ export default function SpacesPage() {
   const router = useRouter()
   const { user } = useAuth()
 
-  if (!user) {
-    router.push("/login")
-    return null
-  }
+  
 
   const handleCreateSpace = () => {
     router.push("/space")

@@ -1,15 +1,75 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Music, LogOut } from "lucide-react"
-import { useAuth } from "../lib/auth-context"
+type User = {
+  id: string
+  name: string
+  email: string
+  
+}
+
 
 export function Navbar() {
   const pathname = usePathname()
-  const { user, signOut } = useAuth()
+  const router = useRouter()
+  const [user, setUser] = useState<User | null>(null)
+  
+  // Load user data from localStorage on component mount
+  useEffect(() => {
+    const checkUserAuth = () => {
+      try {
+        const token = localStorage.getItem("musicSpaceToken")
+        const userData = localStorage.getItem("musicSpaceUser")
+        
+        if (token && userData) {
+          setUser(JSON.parse(userData))
+        } else {
+          setUser(null)
+        }
+      } catch (error) {
+        console.error("Error checking authentication:", error)
+        setUser(null)
+      }
+    }
+    
+    // Check on initial load
+    checkUserAuth()
+    
+    // Set up event listener for storage changes (in case user logs in from another tab)
+    window.addEventListener("storage", checkUserAuth)
+    
+    // Clean up
+    return () => window.removeEventListener("storage", checkUserAuth)
+  }, [])
+  
+  const signOut = () => {
+    // Remove token and user data from localStorage
+    localStorage.removeItem("musicSpaceToken")
+    localStorage.removeItem("musicSpaceUser")
+    
+    // Update state
+    setUser(null)
+    
+    // Redirect to home page
+    router.push("/")
+  }
+
+  // Get user initials for avatar fallback
+  const getUserInitials = () => {
+    if (!user || !user.name) return "U"
+    
+    const nameParts = user.name.split(" ")
+    if (nameParts.length === 1) {
+      return nameParts[0].substring(0, 2).toUpperCase()
+    }
+    
+    return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase()
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-dark-900/80 backdrop-blur-md">
@@ -65,9 +125,9 @@ export function Navbar() {
             <>
               <span className="text-sm text-muted-foreground hidden md:inline-block">{user.name}</span>
               <Avatar>
-                <AvatarImage src={user.image || "/placeholder.svg"} alt="varsha" />
+                <AvatarImage src={"/placeholder.svg"} alt={user.name} />
                 <AvatarFallback className="bg-gradient-uidino">
-                  VA
+                  {getUserInitials()}
                 </AvatarFallback>
               </Avatar>
               <Button
