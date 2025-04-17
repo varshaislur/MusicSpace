@@ -65,6 +65,7 @@ export default function SpacePage() {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [addingSong, setAddingSong] = useState(false)
+  const [votingInProgress, setVotingInProgress] = useState<{[key: string]: boolean}>({})
 
   // Fetch space details on component mount
   useEffect(() => {
@@ -118,6 +119,13 @@ export default function SpacePage() {
   const handleAddSong = async () => {
     if (!youtubeUrl || !spaceId) return
     
+    // Validate YouTube URL format client-side
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/;
+    if (!youtubeRegex.test(youtubeUrl)) {
+      alert("Please enter a valid YouTube URL");
+      return;
+    }
+    
     try {
       setAddingSong(true)
       const token = localStorage.getItem("musicSpaceToken")
@@ -125,8 +133,7 @@ export default function SpacePage() {
         router.push("/login")
         return
       }
-
-      // Updated endpoint to match what's shown in the API request
+  
       const response = await fetch(`http://localhost:5000/api/song/${spaceId}/addSongs`, {
         method: "POST",
         headers: {
@@ -138,18 +145,18 @@ export default function SpacePage() {
           title: songTitle || undefined // Only send if user provided a title
         })
       })
-
+  
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error("Failed to add song")
+        throw new Error(data.message || "Failed to add song");
       }
-
-      const newSong = await response.json()
       
       // Update space details with the new song
       if (spaceDetails) {
         setSpaceDetails({
           ...spaceDetails,
-          songs: [...spaceDetails.songs, newSong]
+          songs: [...spaceDetails.songs, data]
         })
       }
       
@@ -158,13 +165,19 @@ export default function SpacePage() {
       alert("Song added to the queue!")
     } catch (err) {
       console.error("Error adding song:", err)
-      alert("Failed to add song. Please try again.")
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert("Failed to add song. Please try again.")
+      }
     } finally {
       setAddingSong(false)
     }
   }
 
-  const handleUpvote = async (songId: string) => {
+  const handleToggleVote = async (songId: string) => {
+    if (votingInProgress[songId]) return
+
     try {
       const token = localStorage.getItem("musicSpaceToken")
       if (!token) {
@@ -172,14 +185,8 @@ export default function SpacePage() {
         return
       }
 
-      // User can only vote once, check if already voted
-      if (spaceDetails && currentUserId) {
-        const song = spaceDetails.songs.find(s => s.id === songId)
-        if (song && song.votes.some(vote => vote.userId === currentUserId)) {
-          // If already voted, we could implement unvote functionality here
-          return
-        }
-      }
+      // Set voting in progress for this song
+      setVotingInProgress(prev => ({ ...prev, [songId]: true }))
 
       const response = await fetch(`http://localhost:5000/api/song/${spaceId}/songs/${songId}/vote`, {
         method: "POST",
@@ -189,17 +196,27 @@ export default function SpacePage() {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to vote for song")
+        throw new Error("Failed to toggle vote for song")
       }
 
       // Update the song votes in the local state
       if (spaceDetails && currentUserId) {
         const updatedSongs = spaceDetails.songs.map(song => {
           if (song.id === songId) {
-            // Add new vote
-            return {
-              ...song,
-              votes: [...song.votes, { id: "temp-id", songId, userId: currentUserId }]
+            const hasVoted = song.votes.some(vote => vote.userId === currentUserId)
+            
+            if (hasVoted) {
+              // Remove the vote
+              return {
+                ...song,
+                votes: song.votes.filter(vote => vote.userId !== currentUserId)
+              }
+            } else {
+              // Add new vote
+              return {
+                ...song,
+                votes: [...song.votes, { id: "temp-id", songId, userId: currentUserId }]
+              }
             }
           }
           return song
@@ -214,8 +231,10 @@ export default function SpacePage() {
         })
       }
     } catch (err) {
-      console.error("Error voting for song:", err)
-      alert("Failed to vote for song. Please try again.")
+      console.error("Error toggling vote for song:", err)
+      alert("Failed to update vote. Please try again.")
+    } finally {
+      setVotingInProgress(prev => ({ ...prev, [songId]: false }))
     }
   }
 
@@ -392,12 +411,17 @@ export default function SpacePage() {
                           size="sm"
                           variant="ghost"
                           className={`h-8 flex items-center gap-1 hover:bg-black ${hasUserVoted(song) ? 'bg-green-900/20' : ''}`}
-                          onClick={() => handleUpvote(song.id)}
-                          disabled={hasUserVoted(song)}
+                          onClick={() => handleToggleVote(song.id)}
+                          disabled={votingInProgress[song.id]}
+                          title={hasUserVoted(song) ? "Click to unlike" : "Click to like"}
                         >
-                          <ThumbsUp 
-                            className={`h-4 w-4 ${hasUserVoted(song) ? 'text-green-500 fill-green-500' : 'text-green-500'}`} 
-                          />
+                          {votingInProgress[song.id] ? (
+                            <Loader2 className="h-4 w-4 text-green-500 animate-spin" />
+                          ) : (
+                            <ThumbsUp 
+                              className={`h-4 w-4 ${hasUserVoted(song) ? 'text-green-500 fill-green-500' : 'text-green-500'}`} 
+                            />
+                          )}
                           <span className="text-xs">{song.votes.length}</span>
                         </Button>
                       </div>
