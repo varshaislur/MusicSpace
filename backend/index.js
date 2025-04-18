@@ -6,6 +6,7 @@ import userRoutes from "./modules/user/userRoutes.js";
 import bodyParser from "body-parser";
 import spaceRoutes from "./modules/space/spaceRoutes.js";
 import songRoutes from "./modules/song/songRoutes.js";
+import activeSongRoutes from "./modules/activesong/activeSongRoutes.js";
 
 
 dotenv.config();
@@ -26,4 +27,5 @@ app.listen(PORT, () => {
 app.use('/api/user',userRoutes)
 app.use('/api/space',spaceRoutes)
 app.use('/api/song',songRoutes)
+app.use('/api/space',activeSongRoutes)
   

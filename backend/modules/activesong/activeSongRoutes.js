@@ -4,7 +4,7 @@ import {
   getActiveSong, 
   endActiveSong,
   playNextSong
-} from '../controllers/activeSongController.js';
+} from '../activesong/activeSongController.js';
 import authenticate from '../../middleware/auth.js';
 
 const router = express.Router();

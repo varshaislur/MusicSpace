@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, Copy, Music, Play, ThumbsUp, Users, Loader2 } from "lucide-react"
+import { ChevronLeft, Copy, Music, Play, ThumbsUp, Users, Loader2, SkipForward } from "lucide-react"
 import { useParams } from "next/navigation"
+// @ts-ignore
+import YouTubePlayer from 'youtube-player'
 
 // Define types based on API response
 type User = {
@@ -51,6 +53,8 @@ type SpaceDetails = {
   owner: User
   members: SpaceMember[]
   songs: Song[]
+  activeSongId?: string
+  activeSong?: Song
 }
 
 export default function SpacePage() {
@@ -66,55 +70,205 @@ export default function SpacePage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [addingSong, setAddingSong] = useState(false)
   const [votingInProgress, setVotingInProgress] = useState<{[key: string]: boolean}>({})
+  const [playingNext, setPlayingNext] = useState(false)
+  
+  // YouTube player references
+  const playerRef = useRef<any>(null)
+  const playerContainerRef = useRef<HTMLDivElement>(null)
+  const videoLoadedRef = useRef(false)
 
-  // Fetch space details on component mount
-  useEffect(() => {
-    const fetchSpaceDetails = async () => {
-      try {
-        // Check if user is authenticated
-        const token = localStorage.getItem("musicSpaceToken")
-        if (!token) {
-          router.push("/login")
-          return
-        }
-
-        // Get current user ID
-        const userData = localStorage.getItem("musicSpaceUser")
-        if (userData) {
-          const user = JSON.parse(userData)
-          setCurrentUserId(user.id)
-        }
-
-        setLoading(true)
-        const response = await fetch(`http://localhost:5000/api/space/${spaceId}/spaceDetails`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch space details")
-        }
-
-        const data: SpaceDetails = await response.json()
-        setSpaceDetails(data)
-        
-        // Set the first song as currently playing if available
-        if (data.songs && data.songs.length > 0) {
-          setCurrentlyPlaying(data.songs[0])
-        }
-      } catch (err) {
-        console.error("Error fetching space details:", err)
-        setError("Failed to load space. Please try again later.")
-      } finally {
-        setLoading(false)
+  // Fetch space details and active song
+  const fetchSpaceDetails = async () => {
+    try {
+      // Check if user is authenticated
+      const token = localStorage.getItem("musicSpaceToken")
+      if (!token) {
+        router.push("/login")
+        return
       }
-    }
 
+      // Get current user ID
+      const userData = localStorage.getItem("musicSpaceUser")
+      if (userData) {
+        const user = JSON.parse(userData)
+        setCurrentUserId(user.id)
+      }
+
+      setLoading(true)
+      const response = await fetch(`http://localhost:5000/api/space/${spaceId}/spaceDetails`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch space details")
+      }
+
+      const data: SpaceDetails = await response.json()
+      setSpaceDetails(data)
+      
+      // Fetch active song
+      const activeResponse = await fetch(`http://localhost:5000/api/space/${spaceId}/active`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      
+      if (activeResponse.ok) {
+        const activeSongData = await activeResponse.json()
+        setCurrentlyPlaying(activeSongData)
+      }
+    } catch (err) {
+      console.error("Error fetching space details:", err)
+      setError("Failed to load space. Please try again later.")
+    } finally {
+      setLoading(false)
+    }
+  }
+  
+  // Initialize YouTube player when component mounts
+  useEffect(() => {
     if (spaceId) {
       fetchSpaceDetails()
     }
   }, [spaceId, router])
+  
+  // Setup YouTube player once container is available
+  useEffect(() => {
+    if (playerContainerRef.current && currentlyPlaying && !playerRef.current) {
+      // Create a new div for the player
+      const playerDiv = document.createElement('div')
+      playerDiv.id = 'youtube-player'
+      playerContainerRef.current.innerHTML = ''
+      playerContainerRef.current.appendChild(playerDiv)
+      
+      // Initialize YouTube player
+      playerRef.current = YouTubePlayer('youtube-player', {
+        videoId: getYoutubeVideoId(currentlyPlaying.youtubeUrl),
+        width: '100%',
+        height: '100%',
+        playerVars: {
+          autoplay: 1,
+          controls: 1
+        }
+      })
+      
+      // Setup event listeners
+      playerRef.current.on('stateChange', (event: any) => {
+        // When video ends (state 0)
+        if (event.data === 0) {
+          handleSongEnd()
+        }
+      })
+      
+      videoLoadedRef.current = true
+    } else if (playerRef.current && currentlyPlaying) {
+      // If player exists and we have a new currently playing song, load it
+      playerRef.current.loadVideoById(getYoutubeVideoId(currentlyPlaying.youtubeUrl))
+    }
+    
+    // Clean up the player on unmount
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.destroy()
+        playerRef.current = null
+        videoLoadedRef.current = false
+      }
+    }
+  }, [currentlyPlaying])
+  
+  // Handle song end - automatically play next song
+  const handleSongEnd = async () => {
+    try {
+      const token = localStorage.getItem("musicSpaceToken")
+      if (!token || !spaceId) return
+      
+      const response = await fetch(`http://localhost:5000/api/space/${spaceId}/end-current`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error("Failed to end current song")
+      }
+      
+      const data = await response.json()
+      
+      // Update currently playing song
+      setCurrentlyPlaying(data.nextSong)
+      
+      // Refresh space details
+      fetchSpaceDetails()
+    } catch (err) {
+      console.error("Error ending current song:", err)
+    }
+  }
+  
+  // Manually play next song
+  const handlePlayNext = async () => {
+    if (playingNext) return
+    
+    try {
+      setPlayingNext(true)
+      const token = localStorage.getItem("musicSpaceToken")
+      if (!token || !spaceId) return
+      
+      const response = await fetch(`http://localhost:5000/api/space/${spaceId}/play-next`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error("Failed to play next song")
+      }
+      
+      const data = await response.json()
+      
+      // Update currently playing song
+      setCurrentlyPlaying(data.nextSong)
+      
+      // Refresh space details
+      fetchSpaceDetails()
+    } catch (err) {
+      console.error("Error playing next song:", err)
+      alert("Failed to play next song. Please try again.")
+    } finally {
+      setPlayingNext(false)
+    }
+  }
+  
+  // Set a specific song as active
+  const handleSetActiveSong = async (songId: string) => {
+    try {
+      const token = localStorage.getItem("musicSpaceToken")
+      if (!token || !spaceId) return
+      
+      const response = await fetch(`http://localhost:5000/api/space/${spaceId}/songs/${songId}/activate`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error("Failed to set active song")
+      }
+      
+      const data = await response.json()
+      setCurrentlyPlaying(data)
+      
+      // Refresh space details
+      fetchSpaceDetails()
+    } catch (err) {
+      console.error("Error setting active song:", err)
+      alert("Failed to set active song. Please try again.")
+    }
+  }
 
   const handleAddSong = async () => {
     if (!youtubeUrl || !spaceId) return
@@ -152,13 +306,13 @@ export default function SpacePage() {
         throw new Error(data.message || "Failed to add song");
       }
       
-      // Update space details with the new song
-      if (spaceDetails) {
-        setSpaceDetails({
-          ...spaceDetails,
-          songs: [...spaceDetails.songs, data]
-        })
+      // If no current song is playing, automatically set this as active
+      if (!currentlyPlaying && data) {
+        await handleSetActiveSong(data.id)
       }
+      
+      // Refresh the space details
+      fetchSpaceDetails()
       
       setYoutubeUrl("")
       setSongTitle("")
@@ -199,37 +353,8 @@ export default function SpacePage() {
         throw new Error("Failed to toggle vote for song")
       }
 
-      // Update the song votes in the local state
-      if (spaceDetails && currentUserId) {
-        const updatedSongs = spaceDetails.songs.map(song => {
-          if (song.id === songId) {
-            const hasVoted = song.votes.some(vote => vote.userId === currentUserId)
-            
-            if (hasVoted) {
-              // Remove the vote
-              return {
-                ...song,
-                votes: song.votes.filter(vote => vote.userId !== currentUserId)
-              }
-            } else {
-              // Add new vote
-              return {
-                ...song,
-                votes: [...song.votes, { id: "temp-id", songId, userId: currentUserId }]
-              }
-            }
-          }
-          return song
-        })
-
-        // Sort songs by vote count
-        const sortedSongs = [...updatedSongs].sort((a, b) => b.votes.length - a.votes.length)
-        
-        setSpaceDetails({
-          ...spaceDetails,
-          songs: sortedSongs
-        })
-      }
+      // Refresh space details to get updated vote counts
+      fetchSpaceDetails()
     } catch (err) {
       console.error("Error toggling vote for song:", err)
       alert("Failed to update vote. Please try again.")
@@ -284,6 +409,11 @@ export default function SpacePage() {
       </div>
     )
   }
+  
+  // Filter out active song from the queue
+  const queueSongs = spaceDetails?.songs.filter(song => 
+    currentlyPlaying ? song.id !== currentlyPlaying.id : true
+  ) || []
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -331,30 +461,35 @@ export default function SpacePage() {
           <div className="md:col-span-2 space-y-6">
             <Card className="overflow-hidden border border-white/10 bg-zinc-900">
               <CardContent className="p-0">
-                <div className="aspect-video bg-black relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    {currentlyPlaying ? (
-                      <iframe 
-                        width="100%" 
-                        height="100%" 
-                        src={`https://www.youtube.com/embed/${getYoutubeVideoId(currentlyPlaying.youtubeUrl)}`}
-                        title="YouTube video player" 
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowFullScreen
-                      ></iframe>
-                    ) : (
+                <div className="aspect-video bg-black relative" ref={playerContainerRef}>
+                  {!currentlyPlaying && (
+                    <div className="absolute inset-0 flex items-center justify-center">
                       <Play className="h-16 w-16 text-blue-500/50" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-4 flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold">Now Playing</h2>
+                    {currentlyPlaying ? (
+                      <p className="text-gray-400">{currentlyPlaying.title} - {currentlyPlaying.addedBy.name}</p>
+                    ) : (
+                      <p className="text-gray-400">No songs in queue</p>
                     )}
                   </div>
-                </div>
-                <div className="p-4">
-                  <h2 className="text-2xl font-bold">Now Playing</h2>
-                  {currentlyPlaying ? (
-                    <p className="text-gray-400">{currentlyPlaying.title} - {currentlyPlaying.addedBy.name}</p>
-                  ) : (
-                    <p className="text-gray-400">No songs in queue</p>
-                  )}
+                  <Button 
+                    variant="outline" 
+                    className="border-white/10 bg-zinc-800 hover:bg-zinc-700"
+                    onClick={handlePlayNext}
+                    disabled={playingNext || !currentlyPlaying || queueSongs.length === 0}
+                  >
+                    {playingNext ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <SkipForward className="h-4 w-4 mr-2" />
+                    )}
+                    Play Next
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -397,9 +532,13 @@ export default function SpacePage() {
               <CardContent className="p-4">
                 <h3 className="text-xl font-bold mb-4">Up Next</h3>
                 <div className="space-y-3">
-                  {spaceDetails?.songs.length ? (
-                    spaceDetails.songs.map((song, index) => (
-                      <div key={song.id} className="flex items-start space-x-3 rounded-lg p-2 hover:bg-black">
+                  {queueSongs.length > 0 ? (
+                    queueSongs.map((song) => (
+                      <div 
+                        key={song.id} 
+                        className="flex items-start space-x-3 rounded-lg p-2 hover:bg-black cursor-pointer"
+                        onClick={() => handleSetActiveSong(song.id)}
+                      >
                         <div className="h-10 w-10 flex-shrink-0 rounded bg-black flex items-center justify-center">
                           <Music className="h-5 w-5 text-gray-500/50" />
                         </div>
@@ -411,7 +550,10 @@ export default function SpacePage() {
                           size="sm"
                           variant="ghost"
                           className={`h-8 flex items-center gap-1 hover:bg-black ${hasUserVoted(song) ? 'bg-green-900/20' : ''}`}
-                          onClick={() => handleToggleVote(song.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleVote(song.id);
+                          }}
                           disabled={votingInProgress[song.id]}
                           title={hasUserVoted(song) ? "Click to unlike" : "Click to like"}
                         >
