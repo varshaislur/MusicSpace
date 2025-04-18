@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 // schema.prisma
 
 generator client {
@@ -29,14 +23,17 @@ model User {
 }
 
 model Space {
-  id        String            @id @default(uuid())
-  name      String
-  joinCode  String            @unique
-  ownerId   String
-  owner     User              @relation("SpaceOwner", fields: [ownerId], references: [id])
-  members   SpaceMembership[]
-  songs     Song[]
-  createdAt DateTime          @default(now())
+  id           String            @id @default(uuid())
+  name         String
+  joinCode     String            @unique
+  ownerId      String
+  owner        User              @relation("SpaceOwner", fields: [ownerId], references: [id])
+  members      SpaceMembership[]
+  songs        Song[]
+  activeSongId String?           // ID of the currently playing song
+  activeSong   Song?             @relation("ActiveSong", fields: [activeSongId], references: [id])
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 }
 
 model SpaceMembership {
@@ -47,20 +44,20 @@ model SpaceMembership {
   spaceId  String
   joinedAt DateTime @default(now())
 
-  @@unique([userId, spaceId],name: "userId_spaceId")
+  @@unique([userId, spaceId], name: "userId_spaceId")
 }
 
 model Song {
-  id         String @id @default(uuid())
+  id         String   @id @default(uuid())
   youtubeUrl String
   title      String
-  space      Space  @relation(fields: [spaceId], references: [id])
+  space      Space    @relation(fields: [spaceId], references: [id])
   spaceId    String
-
-  addedBy   User     @relation(fields: [addedById], references: [id])
-  addedById String
-  votes     Vote[]
-  createdAt DateTime @default(now())
+  addedBy    User     @relation(fields: [addedById], references: [id])
+  addedById  String
+  votes      Vote[]
+  createdAt  DateTime @default(now())
+  activeIn   Space[]  @relation("ActiveSong") // Relation to spaces where this song is active
 }
 
 model Vote {
