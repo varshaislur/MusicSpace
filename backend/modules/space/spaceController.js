@@ -247,3 +247,40 @@ export const getSpaceMembers = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
+export const leaveSpace = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+    
+    // Check if space exists and user is a member
+    const membership = await prisma.spaceMembership.findUnique({
+      where: {
+        userId_spaceId: {
+          userId,
+          spaceId: id
+        }
+      }
+    });
+    
+    if (!membership) {
+      return res.status(404).json({ message: 'Membership not found' });
+    }
+    
+    // Remove user from space
+    await prisma.spaceMembership.delete({
+      where: {
+        userId_spaceId: {
+          userId,
+          spaceId: id
+        }
+      }
+    });
+    
+    res.json({ message: 'Successfully left the space' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

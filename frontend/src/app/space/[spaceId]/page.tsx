@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, Copy, Music, Play, ThumbsUp, Users, Loader2, SkipForward } from "lucide-react"
+import { ChevronLeft, Copy, Music, Play, ThumbsUp, Users, Loader2, SkipForward, LogOut } from "lucide-react"
 import { useParams } from "next/navigation"
 // @ts-ignore
 import YouTubePlayer from 'youtube-player'
@@ -71,6 +71,7 @@ export default function SpacePage() {
   const [addingSong, setAddingSong] = useState(false)
   const [votingInProgress, setVotingInProgress] = useState<{[key: string]: boolean}>({})
   const [playingNext, setPlayingNext] = useState(false)
+  const [leavingSpace, setLeavingSpace] = useState(false)
   
   // YouTube player references
   const playerRef = useRef<any>(null)
@@ -363,6 +364,41 @@ export default function SpacePage() {
     }
   }
 
+  // Handler for leaving space
+  const handleLeaveSpace = async () => {
+    if (leavingSpace) return
+    
+    // Confirm before leaving
+    if (!confirm("Are you sure you want to leave this space?")) {
+      return
+    }
+    
+    try {
+      setLeavingSpace(true)
+      const token = localStorage.getItem("musicSpaceToken")
+      if (!token || !spaceId) return
+      
+      const response = await fetch(`http://localhost:5000/api/space/${spaceId}/leave`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error("Failed to leave space")
+      }
+      
+      // Redirect to home page after successfully leaving
+      router.push("/")
+      
+    } catch (err) {
+      console.error("Error leaving space:", err)
+      alert("Failed to leave space. Please try again.")
+      setLeavingSpace(false)
+    }
+  }
+
   // Check if current user has already upvoted a song
   const hasUserVoted = (song: Song): boolean => {
     if (!currentUserId) return false
@@ -424,6 +460,19 @@ export default function SpacePage() {
             <span>Back to Home</span>
           </Link>
           <div className="ml-auto flex items-center gap-4">
+            <Button 
+              variant="destructive" 
+              className="flex items-center gap-1" 
+              onClick={handleLeaveSpace}
+              disabled={leavingSpace}
+            >
+              {leavingSpace ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <LogOut className="h-4 w-4 mr-1" />
+              )}
+              Leave Space
+            </Button>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="flex items-center gap-1 border-white/10 bg-zinc-900">
                 <Users className="h-3 w-3" />
