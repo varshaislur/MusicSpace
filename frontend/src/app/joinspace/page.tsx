@@ -1,4 +1,7 @@
 "use client"
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/no-unescaped-entities */
+
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -77,7 +80,8 @@ export default function SpacesPage() {
       setTimeout(() => {
         router.push(`/space/${spaceData.id}`);
       }, 1500);
-      
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     } catch (error: any) {
       console.error("Error creating space:", error);
       setError(error.message || "Failed to create space. Please try again.");
@@ -134,6 +138,7 @@ export default function SpacesPage() {
       setTimeout(() => {
         router.push(`/space/${joinData.space.id}`);
       }, 1500);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       
     } catch (error: any) {
       console.error("Error joining space:", error);

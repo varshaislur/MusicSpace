@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, Copy, Music, Play, ThumbsUp, Users } from "lucide-react"
 
 export default function SpacePage() {
-  const router = useRouter()
  
   
   const [youtubeUrl, setYoutubeUrl] = useState("")

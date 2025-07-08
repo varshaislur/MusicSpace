@@ -2,16 +2,57 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+
 import { Input } from "@/components/ui/input"
 import { Music, Play, Plus, ThumbsUp, Users } from "lucide-react"
-import { useAuth } from "@/lib/auth-context"
-import { useState } from "react"
+import { useState,useEffect } from "react"
+
+
+type User = {
+  id: string
+  name: string
+  email: string
+}
 
 export default function Home() {
-  const router = useRouter()
-  const [user, setUser] = useState(null)
+  
+
+
+    const [user, setUser] = useState<User | null>(null)
+     const checkUserAuth = () => {
+        try {
+          const token = localStorage.getItem("musicSpaceToken")
+          const userData = localStorage.getItem("musicSpaceUser")
+          
+          if (token && userData) {
+            setUser(JSON.parse(userData))
+          } else {
+            setUser(null)
+          }
+        } catch (error) {
+          console.error("Error checking authentication:", error)
+          setUser(null)
+        }
+      }
+      
+      // Load user data on component mount and set up listeners
+      useEffect(() => {
+        // Check on initial load
+        checkUserAuth()
+        
+        // Listen for storage changes (if user logs in from another tab)
+        window.addEventListener("storage", checkUserAuth)
+        
+        // Listen for our custom auth change event
+        window.addEventListener("authChange", checkUserAuth)
+        
+        // Clean up
+        return () => {
+          window.removeEventListener("storage", checkUserAuth)
+          window.removeEventListener("authChange", checkUserAuth)
+        }
+      }, [])
+    
   
 
   return (
@@ -46,7 +87,7 @@ export default function Home() {
             <div className="space-x-4">
               {user ? (
                 <Button 
-                  size="lg" 
+                  size="lg"   
                   className="border-0" 
                   asChild
                   style={{ 
@@ -60,7 +101,7 @@ export default function Home() {
                     e.currentTarget.style.backgroundImage = "linear-gradient(90deg, #36d45a, #3b82f6, #8b5cf6)"
                   }}
                 >
-                  <Link href="/spaces">Get Started</Link>
+                  <Link href="/joinspace">Get Started</Link>
                 </Button>
               ) : (
                 <Button 
@@ -287,3 +328,5 @@ export default function Home() {
     </div>
   )
 }
+
+
