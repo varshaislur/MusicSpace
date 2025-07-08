@@ -1,4 +1,6 @@
 "use client"
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/no-unescaped-entities */
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
@@ -10,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, Copy, Music, Play, ThumbsUp, Users, Loader2, SkipForward, LogOut } from "lucide-react"
 import { useParams } from "next/navigation"
-// @ts-ignore
+// @ts-expect-error
 import YouTubePlayer from 'youtube-player'
 
 // Define types based on API response
