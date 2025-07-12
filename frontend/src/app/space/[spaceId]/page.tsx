@@ -75,6 +75,7 @@ export default function SpacePage() {
   const [votingInProgress, setVotingInProgress] = useState<{[key: string]: boolean}>({})
   const [playingNext, setPlayingNext] = useState(false)
   const [leavingSpace, setLeavingSpace] = useState(false)
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"
   
   // YouTube player references
   const playerRef = useRef<any>(null)
@@ -99,7 +100,7 @@ export default function SpacePage() {
       }
 
       setLoading(true)
-      const response = await fetch(`http://localhost:5000/api/space/${spaceId}/spaceDetails`, {
+      const response = await fetch(`${BACKEND_URL}/api/space/${spaceId}/spaceDetails`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -113,7 +114,7 @@ export default function SpacePage() {
       setSpaceDetails(data)
       
       // Fetch active song
-      const activeResponse = await fetch(`http://localhost:5000/api/space/${spaceId}/active`, {
+      const activeResponse = await fetch(`${BACKEND_URL}/api/space/${spaceId}/active`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -188,7 +189,7 @@ export default function SpacePage() {
       const token = localStorage.getItem("musicSpaceToken")
       if (!token || !spaceId) return
       
-      const response = await fetch(`http://localhost:5000/api/space/${spaceId}/end-current`, {
+      const response = await fetch(`${BACKEND_URL}/api/space/${spaceId}/end-current`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`
@@ -220,7 +221,7 @@ export default function SpacePage() {
       const token = localStorage.getItem("musicSpaceToken")
       if (!token || !spaceId) return
       
-      const response = await fetch(`http://localhost:5000/api/space/${spaceId}/play-next`, {
+      const response = await fetch(`${BACKEND_URL}/api/space/${spaceId}/play-next`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`
@@ -252,7 +253,7 @@ export default function SpacePage() {
       const token = localStorage.getItem("musicSpaceToken")
       if (!token || !spaceId) return
       
-      const response = await fetch(`http://localhost:5000/api/space/${spaceId}/songs/${songId}/activate`, {
+      const response = await fetch(`${BACKEND_URL}/api/space/${spaceId}/songs/${songId}/activate`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`
@@ -346,7 +347,7 @@ export default function SpacePage() {
       // Set voting in progress for this song
       setVotingInProgress(prev => ({ ...prev, [songId]: true }))
 
-      const response = await fetch(`http://localhost:5000/api/song/${spaceId}/songs/${songId}/vote`, {
+      const response = await fetch(`${BACKEND_URL}/api/song/${spaceId}/songs/${songId}/vote`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`
@@ -381,7 +382,7 @@ export default function SpacePage() {
       const token = localStorage.getItem("musicSpaceToken")
       if (!token || !spaceId) return
       
-      const response = await fetch(`http://localhost:5000/api/space/${spaceId}/leave`, {
+      const response = await fetch(`${BACKEND_URL}/api/space/${spaceId}/leave`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`

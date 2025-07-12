@@ -11,6 +11,7 @@ import { Music, UserPlus, LogIn } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function AuthPage() {
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("login")
   
@@ -47,7 +48,7 @@ export default function AuthPage() {
     setLoginError("")
     
     try {
-      const response = await fetch("http://localhost:5000/api/user/login", {
+      const response = await fetch(`${BACKEND_URL}/api/user/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -90,7 +91,7 @@ export default function AuthPage() {
     setRegisterError("")
     
     try {
-      const response = await fetch("http://localhost:5000/api/user/register", {
+      const response = await fetch(`${BACKEND_URL}/api/user/register`, {
         method: "POST", 
         headers: {
           "Content-Type": "application/json",
