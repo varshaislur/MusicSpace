@@ -106,14 +106,6 @@ export function Navbar() {
             </li>
             <li>
               <Link
-                href="/explore"
-                className={`text-sm ${pathname === "/explore" ? "text-brand-blue" : "text-muted-foreground"} hover:text-brand-blue transition-colors`}
-              >
-                Explore
-              </Link>
-            </li>
-            <li>
-              <Link
                 href="/about"
                 className={`text-sm ${pathname === "/about" ? "text-brand-purple" : "text-muted-foreground"} hover:text-brand-purple transition-colors`}
               >
@@ -130,6 +122,14 @@ export function Navbar() {
                 </Link>
               </li>
             )}
+            <li>
+              <Link
+                href="/spotify"
+                className={`text-sm ${pathname === "/spotify" ? "text-brand-orange" : "text-muted-foreground"} hover:text-brand-orange transition-colors`}
+              >
+                Spotify
+              </Link>
+            </li>
           </ul>
         </nav>
 

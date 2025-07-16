@@ -293,7 +293,7 @@ export default function SpacePage() {
         return
       }
   
-      const response = await fetch(`http://localhost:5000/api/song/${spaceId}/addSongs`, {
+      const response = await fetch(`${BACKEND_URL}/api/song/${spaceId}/addSongs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
