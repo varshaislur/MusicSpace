@@ -1,5 +1,6 @@
 import prisma from '../../utils/prisma.js';
 import youtubesearchapi from 'youtube-search-api';
+import axios from 'axios';
 
 const extractYoutubeVideoId = (url) => {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -52,10 +53,26 @@ export const addSong = async (req, res) => {
     if (!finalTitle || finalTitle.trim() === '') {
       try {
         // Fetch video details from YouTube API
-        const videoDetails = await youtubesearchapi.GetVideoDetails(videoId);
+        // const videoDetails = await youtubesearchapi.GetVideoDetails(videoId);
+        const apiKey = process.env.YOUTUBE_API_KEY;
+        const response = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
+          params: {
+            part: 'snippet',
+            id: videoId,
+            key: apiKey
+          }
+        });
         
-        if (videoDetails && videoDetails.title) {
-          finalTitle = videoDetails.title;
+        
+        // if (videoDetails && videoDetails.title) {
+        //   finalTitle = videoDetails.title;
+        // } else {
+        //   finalTitle = 'Unknown Title';
+        // }
+
+        const items = response.data.items;
+        if (items.length > 0 && items[0].snippet) {
+          finalTitle = items[0].snippet.title;
         } else {
           finalTitle = 'Unknown Title';
         }
