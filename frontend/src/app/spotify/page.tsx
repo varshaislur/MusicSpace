@@ -1,6 +1,7 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
+import { Suspense } from "react";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
@@ -51,6 +52,7 @@ const SpotifyPage = () => {
   };
 
   return (
+     <Suspense fallback={<div>Loading...</div>}>
     <div className="min-h-screen text-foreground" style={{ backgroundColor: "hsl(240, 10%, 3.9%)" }}>
       {/* Header Section */}
       <section className="relative w-full py-12 md:py-24 lg:py-32 overflow-hidden">
@@ -281,6 +283,7 @@ const SpotifyPage = () => {
         </div>
       </section>
     </div>
+    </Suspense>
   );
 };
 
