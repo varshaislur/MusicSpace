@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Music, LogIn, RefreshCw, AlertCircle, Play, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+
+
 const SpotifyPage = () => {
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [token, setToken] = useState<string | null>(null);
