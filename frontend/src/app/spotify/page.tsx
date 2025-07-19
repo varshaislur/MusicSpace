@@ -1,8 +1,8 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
-import { Suspense } from "react";
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
@@ -11,15 +11,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Music, LogIn, RefreshCw, AlertCircle, Play, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+const BACKEND_URL = "http://localhost:5000";
 
-
-const SpotifyPage = () => {
+const SpotifyContent = () => {
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
-  const BACKEND_URL =  "http://localhost:5000";
 
   useEffect(() => {
     const spotifyToken = searchParams.get("spotify_token");
@@ -34,7 +33,7 @@ const SpotifyPage = () => {
     setError("");
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/spotify/playlists?token=${accessToken}`
+        `${BACKEND_URL}/api/spotify/playlists?token=${accessToken}`
       );
       setPlaylists(response.data.items || []);
     } catch (error) {
@@ -54,7 +53,6 @@ const SpotifyPage = () => {
   };
 
   return (
-     <Suspense fallback={<div>Loading...</div>}>
     <div className="min-h-screen text-foreground" style={{ backgroundColor: "hsl(240, 10%, 3.9%)" }}>
       {/* Header Section */}
       <section className="relative w-full py-12 md:py-24 lg:py-32 overflow-hidden">
@@ -116,16 +114,9 @@ const SpotifyPage = () => {
                   <Button 
                     onClick={handleLogin}
                     className="w-full max-w-md border-0" 
-                    style={{ 
-                      background: "#1db954",
-                      transition: "all 0.3s ease"
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.background = "#1ed760"
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.background = "#1db954"
-                    }}
+                    style={{ background: "#1db954", transition: "all 0.3s ease" }}
+                    onMouseOver={(e) => { e.currentTarget.style.background = "#1ed760" }}
+                    onMouseOut={(e) => { e.currentTarget.style.background = "#1db954" }}
                   >
                     <LogIn className="mr-2 h-4 w-4" />
                     Login with Spotify
@@ -168,10 +159,7 @@ const SpotifyPage = () => {
                       <Card 
                         key={playlist.id}
                         className="group cursor-pointer transition-all duration-300 hover:scale-105"
-                        style={{ 
-                          borderColor: "rgba(255, 255, 255, 0.1)", 
-                          backgroundColor: "hsl(240, 10%, 5%)" 
-                        }}
+                        style={{ borderColor: "rgba(255, 255, 255, 0.1)", backgroundColor: "hsl(240, 10%, 5%)" }}
                       >
                         <CardContent className="p-4">
                           <div className="flex items-start space-x-4">
@@ -285,8 +273,13 @@ const SpotifyPage = () => {
         </div>
       </section>
     </div>
-    </Suspense>
   );
 };
 
-export default SpotifyPage;
+export default function SpotifyPage() {
+  return (
+    <Suspense fallback={<div className="text-center py-10">Loading Spotify data...</div>}>
+      <SpotifyContent />
+    </Suspense>
+  );
+}
