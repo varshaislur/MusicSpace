@@ -7,6 +7,7 @@ import bodyParser from "body-parser";
 import spaceRoutes from "./modules/space/spaceRoutes.js";
 import songRoutes from "./modules/song/songRoutes.js";
 import activeSongRoutes from "./modules/activesong/activeSongRoutes.js";
+import spotifyRoutes from "./modules/spotify/spotifyRoutes.js";
 
 
 dotenv.config();
@@ -28,4 +29,4 @@ app.use('/api/user',userRoutes)
 app.use('/api/space',spaceRoutes)
 app.use('/api/song',songRoutes)
 app.use('/api/space',activeSongRoutes)
-  
+app.use('/api/spotify', spotifyRoutes);
